@@ -1,0 +1,673 @@
+/* ---------------------------------------------------------------------
+   Paper-planner theme. Mirrors a physical disc-bound planner: cream page
+   stock, hairline rules, small-caps labels, pastel month tabs, lined
+   "notebook" day boxes. Light by default (like paper); a dark variant
+   for using the planner at night without a glare.
+------------------------------------------------------------------------ */
+
+:root {
+  --paper: #fbf9f4;
+  --paper-line: #e4e0d4;
+  --ink: #2b2b33;
+  --ink-soft: #6b6875;
+  --card: #ffffff;
+  --card-border: #e7e3d8;
+  --accent: #9fcbb0;
+  --accent-ink: #2f4a3a;
+  --shadow: 0 10px 30px -12px rgba(60, 50, 30, 0.18);
+  --disc: #a99be0;
+  color-scheme: light;
+}
+
+:root:not([data-theme='light']) {
+  @media (prefers-color-scheme: dark) {
+    --paper: #1b1a1f;
+    --paper-line: #34323b;
+    --ink: #ece9f2;
+    --ink-soft: #a6a2b2;
+    --card: #242229;
+    --card-border: #34323b;
+    --accent: #4f6f5c;
+    --accent-ink: #cfe9d9;
+    --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.5);
+    --disc: #7a6db3;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #1b1a1f;
+  --paper-line: #34323b;
+  --ink: #ece9f2;
+  --ink-soft: #a6a2b2;
+  --card: #242229;
+  --card-border: #34323b;
+  --accent: #4f6f5c;
+  --accent-ink: #cfe9d9;
+  --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.5);
+  --disc: #7a6db3;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---------- shell ---------- */
+
+.planner-shell {
+  min-height: 100%;
+  padding: env(safe-area-inset-top, 0px) 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.planner-shell__chrome {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+}
+
+.month-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.month-tabs__tab {
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.month-tabs__tab--active {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+  font-weight: 700;
+}
+
+.top-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.top-bar__title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.top-bar__month {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.top-bar__year {
+  font-size: 16px;
+  color: var(--ink-soft);
+}
+
+.top-bar__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  border: none;
+  background: transparent;
+  padding: 6px 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.view-toggle button.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.sign-out {
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.planner-shell__nav {
+  display: flex;
+  gap: 8px;
+}
+
+.planner-shell__nav button {
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.planner-shell__error {
+  background: #fbe3d8;
+  color: #6b3a1f;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.planner-shell__spread {
+  flex: 1;
+}
+
+/* ---------- shared page/box chrome ---------- */
+
+.paper-page {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  position: relative;
+}
+
+/* Decorative disc-binding rail along the left edge, like the coiled
+   spine in a disc-bound planner. Purely visual. */
+.paper-page::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: 24px;
+  bottom: 24px;
+  width: 18px;
+  background-image: radial-gradient(circle, var(--disc) 5px, transparent 5.5px);
+  background-size: 18px 22px;
+  background-repeat: repeat-y;
+  opacity: 0.55;
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .paper-page::before {
+    display: block;
+  }
+}
+
+.paper-page__title {
+  margin: 0 0 18px;
+  font-size: 22px;
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+.paper-box {
+  border: 1px solid var(--paper-line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.paper-box h3 {
+  margin: 0 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.paper-box__empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* ---------- month page ---------- */
+
+.month-page__grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  grid-template-areas:
+    'priorities side'
+    'notes notes';
+  gap: 16px;
+}
+
+.month-page__priorities {
+  grid-area: priorities;
+}
+
+.month-page__side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.month-page__notes {
+  grid-area: notes;
+}
+
+@media (max-width: 640px) {
+  .month-page__grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'priorities'
+      'side'
+      'notes';
+  }
+}
+
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.checklist li {
+  border-bottom: 1px solid var(--paper-line);
+}
+
+.checklist li:last-child {
+  border-bottom: none;
+}
+
+.checklist label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 2px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.checklist input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.checklist__done {
+  text-decoration: line-through;
+  color: var(--ink-soft);
+}
+
+.event-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.event-lines li {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px dashed var(--paper-line);
+}
+
+.event-lines li:last-child {
+  border-bottom: none;
+}
+
+.event-lines__date {
+  flex: 0 0 auto;
+  color: var(--ink-soft);
+  min-width: 52px;
+}
+
+/* ---------- week page ---------- */
+
+.week-page__year {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  letter-spacing: 0.08em;
+}
+
+.week-page__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.week-page__notes {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 640px) {
+  .week-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.day-box {
+  text-align: left;
+  border: 1px solid var(--paper-line);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 12px 14px 16px;
+  cursor: pointer;
+  position: relative;
+  min-height: 120px;
+  font: inherit;
+  color: inherit;
+  overflow: hidden;
+}
+
+.day-box:hover,
+.day-box:focus-visible {
+  border-color: var(--accent);
+}
+
+.day-box__header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.day-box__number {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.day-box__name {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.day-box__events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.day-box__events li {
+  font-size: 12.5px;
+  display: flex;
+  gap: 6px;
+}
+
+.day-box__time {
+  color: var(--ink-soft);
+  flex: 0 0 auto;
+}
+
+.day-box__lines {
+  position: absolute;
+  inset: 44px 0 0 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--paper-line) 0,
+    var(--paper-line) 1px,
+    transparent 1px,
+    transparent 22px
+  );
+}
+
+/* ---------- ink canvas ---------- */
+
+.ink-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ink-canvas__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ink-canvas__hint {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.ink-canvas__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ink-canvas__actions button {
+  border: 1px solid var(--paper-line);
+  background: var(--card);
+  color: var(--ink-soft);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ink-canvas__actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ink-canvas__surface {
+  border: 1px solid var(--paper-line);
+  border-radius: 8px;
+  background-color: var(--card);
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+  background-size: 18px 18px;
+  background-position: -1px -1px;
+  opacity: 1;
+  touch-action: none;
+  position: relative;
+}
+
+.ink-canvas__surface canvas {
+  display: block;
+  touch-action: none;
+}
+
+/* ---------- note panel (modal) ---------- */
+
+.note-panel__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 15, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+  padding: 0;
+}
+
+@media (min-width: 720px) {
+  .note-panel__backdrop {
+    align-items: center;
+    padding: 20px;
+  }
+}
+
+.note-panel {
+  background: var(--card);
+  width: 100%;
+  max-width: 560px;
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 16px 16px 0 0;
+  padding: 20px 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  box-shadow: var(--shadow);
+}
+
+@media (min-width: 720px) {
+  .note-panel {
+    border-radius: 16px;
+  }
+}
+
+.note-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.note-panel__header h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.note-panel__header p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.note-panel__close {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.note-panel__section {
+  margin-bottom: 16px;
+}
+
+.note-panel__label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.note-panel__label span {
+  text-transform: none;
+  letter-spacing: normal;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.note-panel textarea {
+  width: 100%;
+  border: 1px solid var(--paper-line);
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ---------- sign-in ---------- */
+
+.sign-in {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--paper);
+}
+
+.sign-in__card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 32px;
+  max-width: 380px;
+  text-align: center;
+}
+
+.sign-in__card h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.sign-in__card p {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.sign-in__card button {
+  border: none;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sign-in__card button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sign-in__warning {
+  background: #fbe3d8;
+  color: #6b3a1f;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  text-align: left;
+}
+
+.sign-in__error {
+  margin-top: 12px;
+  color: #a33b3b;
+  font-size: 13px;
+}
